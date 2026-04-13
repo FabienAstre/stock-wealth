@@ -260,41 +260,6 @@ elif page == "🔍 Ticker Deep Dive":
 
     st.write(row)
 
-    # ── Company info + News ───────────────────────────────────────
-    st.markdown("---")
-    ci1,ci2,ci3 = st.columns(3)
-    name     = inf.get("longName") or inf.get("shortName",ticker)
-    sector   = inf.get("sector","N/A")
-    industry = inf.get("industry","N/A")
-    mktcap   = inf.get("marketCap")
-    pe       = inf.get("trailingPE")
-    fpe      = inf.get("forwardPE")
-    beta     = inf.get("beta")
-    divy     = inf.get("dividendYield")
-    w52h     = inf.get("fiftyTwoWeekHigh")
-    w52l     = inf.get("fiftyTwoWeekLow")
-    ci1.markdown(f"**{name}**\n\nSector: {sector}\n\nIndustry: {industry}")
-    ci2.markdown(
-        f"Market Cap: {fmt_opt(mktcap,'$.1fB')}\n\n"
-        f"P/E trailing: {fmt_opt(pe,'.1f')}\n\n"
-        f"P/E forward: {fmt_opt(fpe,'.1f')}")
-    ci3.markdown(
-        f"Beta: {fmt_opt(beta,'.2f')}\n\n"
-        f"Dividend: {'{:.2%}'.format(divy) if divy else 'N/A'}\n\n"
-        f"52W: {fmt_opt(w52l,'$.2f')} → {fmt_opt(w52h,'$.2f')}")
- 
-    st.markdown("---")
-    st.markdown(f"### 📰 News — {ticker}")
-    for n in (news or []):
-        lh = (f'<a href="{n["link"]}" target="_blank" style="color:#5c7cfa;text-decoration:none">'
-              f'{n["title"]}</a>' if n.get("link") else n["title"])
-        st.markdown(
-            f'<div class="news-item">{lh}'
-            f'<div style="font-size:10px;color:#888;margin-top:3px">{n.get("date","")}</div></div>',
-            unsafe_allow_html=True)
-    if not news:
-        st.info("No recent news.")
-
 
 # =========================
 # NEWS (placeholder)
