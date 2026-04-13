@@ -1,10 +1,8 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import yfinance as yf
 
-st.set_page_config(page_title="Portfolio Dashboard", layout="wide")
-
-st.title("📊 Portfolio Dashboard")
 
 # =========================
 # PORTFOLIO INPUT
@@ -74,146 +72,216 @@ PORTFOLIO = {
     "ZJPN.TO": {"shares": 13.21, "ac": 45.04},
 }
 
+
 # =========================
-# PRICE LOADING
+# MARKET DATA
 # =========================
 @st.cache_data(ttl=300)
-def get_prices(tickers):
-    data = yf.download(tickers, period="1d", interval="1m", progress=False)
-    return data["Close"].iloc[-1]
+def get_price_data(ticker):
+    try:
+        data = yf.Ticker(ticker).history(period="6mo")
+        return data
+    except:
+        return None
 
-tickers = list(PORTFOLIO.keys())
-prices = get_prices(tickers)
 
-# =========================
-# BUILD DATAFRAME
-# =========================
-rows = []
+def get_last_price(df):
+    if df is None or df.empty:
+        return None
+    return float(df["Close"].iloc[-1])
 
-for t, v in PORTFOLIO.items():
-    price = prices.get(t, None)
-    if price is None:
-        continue
-
-    rows.append({
-        "Ticker": t,
-        "Price": price,
-        "Shares": v["shares"],
-        "Avg Cost": v["ac"]
-    })
-
-df = pd.DataFrame(rows)
 
 # =========================
-# CALCULATIONS
+# INDICATORS
 # =========================
-df["Market Value"] = df["Price"] * df["Shares"]
-df["Cost Basis"] = df["Avg Cost"] * df["Shares"]
-df["PnL"] = df["Market Value"] - df["Cost Basis"]
-df["Return %"] = (df["Price"] - df["Avg Cost"]) / df["Avg Cost"] * 100
+def rsi(series, period=14):
+    delta = series.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(period).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(period).mean()
+    rs = gain / loss
+    return 100 - (100 / (1 + rs))
 
-total_value = df["Market Value"].sum()
-total_cost = df["Cost Basis"].sum()
 
-df["Weight %"] = df["Market Value"] / total_value * 100
+def compute_indicators(df):
+    df = df.copy()
+    df["MA20"] = df["Close"].rolling(20).mean()
+    df["MA50"] = df["Close"].rolling(50).mean()
+    df["RSI"] = rsi(df["Close"])
+    return df
+
 
 # =========================
-# PORTFOLIO OVERVIEW
+# SIGNAL ENGINE (RULE-BASED)
 # =========================
-st.subheader("📊 Portfolio Overview")
+def signal_logic(last_price, ma20, ma50, rsi_val):
+    if any(pd.isna([ma20, ma50, rsi_val])):
+        return "No Signal"
 
-c1, c2, c3, c4 = st.columns(4)
+    if ma20 > ma50 and rsi_val < 70:
+        return "Positive Trend"
+    elif ma20 < ma50 and rsi_val > 60:
+        return "Weak Trend"
+    else:
+        return "Neutral"
 
-c1.metric("Portfolio Value", f"${total_value:,.0f}")
-c2.metric("Total PnL", f"${df['PnL'].sum():,.0f}")
-c3.metric("Return %", f"{((total_value-total_cost)/total_cost)*100:.2f}%")
-c4.metric("Positions", len(df))
 
-top5 = df.sort_values("Weight %", ascending=False).head(5)["Weight %"].sum()
+# =========================
+# BUILD PORTFOLIO TABLE
+# =========================
+def build_df():
+    rows = []
 
-st.info(f"Top 5 Concentration: {top5:.1f}% | Largest Position: {df['Weight %'].max():.1f}%")
+    for t, v in PORTFOLIO.items():
+        df = get_price_data(t)
+        price = get_last_price(df)
+
+        shares = v["shares"]
+        ac = v["ac"]
+        cost = shares * ac
+
+        if price:
+            market = shares * price
+            pnl = market - cost
+            return_pct = pnl / cost * 100
+        else:
+            market, pnl, return_pct = None, None, None
+
+        if df is not None and not df.empty:
+            df = compute_indicators(df)
+            last = df.iloc[-1]
+
+            ma20 = last["MA20"]
+            ma50 = last["MA50"]
+            rsi_val = last["RSI"]
+
+            signal = signal_logic(price, ma20, ma50, rsi_val)
+            volatility = df["Close"].pct_change().std() * 100
+        else:
+            ma20 = ma50 = rsi_val = signal = volatility = None
+
+        rows.append({
+            "Ticker": t,
+            "Shares": shares,
+            "AC": ac,
+            "Cost": cost,
+            "Price": price,
+            "Market Value": market,
+            "PnL": pnl,
+            "Return %": return_pct,
+            "RSI": rsi_val,
+            "MA20": ma20,
+            "MA50": ma50,
+            "Signal": signal,
+            "Volatility %": volatility
+        })
+
+    return pd.DataFrame(rows)
+
+
+df = build_df()
 
 # =========================
 # RISK SYSTEM
 # =========================
-st.subheader("⚠️ Risk System")
+def risk_score(row):
+    if pd.isna(row["Volatility %"]):
+        return "Unknown"
 
-def risk(row):
-    flags = []
-    if row["Weight %"] > 10:
-        flags.append("Overweight")
-    if row["Return %"] < -25:
-        flags.append("Drawdown")
-    if row["Weight %"] < 1:
-        flags.append("Too Small")
-    return ", ".join(flags)
+    size_risk = row["Cost"]
+    vol = row["Volatility %"]
 
-df["Risk"] = df.apply(risk, axis=1)
+    if size_risk > 10000 and vol > 3:
+        return "High"
+    elif vol > 2:
+        return "Medium"
+    return "Low"
 
-risk_df = df[df["Risk"] != ""]
 
-st.dataframe(risk_df[["Ticker", "Weight %", "Return %", "Risk"]])
+df["Risk"] = df.apply(risk_score, axis=1)
 
-# =========================
-# SIGNAL SYSTEM
-# =========================
-def signal(row):
-    if row["Return %"] > 30 and row["Weight %"] > 5:
-        return "Trim"
-    elif row["Return %"] < -20:
-        return "Review"
-    elif row["Weight %"] < 2:
-        return "Add"
-    else:
-        return "Hold"
-
-df["Signal"] = df.apply(signal, axis=1)
-
-# =========================
-# SIGNAL SUMMARY
-# =========================
-st.subheader("📋 Signal Summary")
-
-summary = df.groupby("Signal").agg(
-    Count=("Ticker", "count"),
-    Capital=("Market Value", "sum")
-).reset_index()
-
-summary["Capital %"] = summary["Capital"] / total_value * 100
-
-st.dataframe(summary)
 
 # =========================
 # TOP TRADES
 # =========================
-st.subheader("🚀 Top Trades to Execute")
+def top_trades(df):
+    return df.sort_values("Return %", ascending=False)[
+        ["Ticker", "Return %", "Signal", "Risk"]
+    ].head(8)
 
-add = df[df["Signal"] == "Add"].sort_values("Weight %")
-trim = df[df["Signal"] == "Trim"].sort_values("Return %", ascending=False)
-review = df[df["Signal"] == "Review"].sort_values("Return %")
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    st.markdown("➕ Add")
-    st.dataframe(add[["Ticker", "Weight %", "Return %"]].head(10))
-
-with c2:
-    st.markdown("➖ Trim")
-    st.dataframe(trim[["Ticker", "Return %", "Weight %"]].head(10))
-
-with c3:
-    st.markdown("⚠️ Review")
-    st.dataframe(review[["Ticker", "Return %"]].head(10))
 
 # =========================
-# POSITION SIZING
+# UI
 # =========================
-st.subheader("📉 Position Sizing Guide")
+st.set_page_config(layout="wide")
 
-target = 0.05 * total_value
+page = st.sidebar.radio(
+    "Navigation",
+    [
+        "📊 Portfolio Overview",
+        "🔍 Ticker Deep Dive",
+        "📰 News Feed",
+        "📉 Signals Summary",
+        "🛠️ Trading Tools"
+    ]
+)
 
-df["Target Value"] = target
-df["Rebalance ($)"] = df["Target Value"] - df["Market Value"]
+# =========================
+# OVERVIEW
+# =========================
+if page == "📊 Portfolio Overview":
+    st.title("Portfolio Overview (Live)")
 
-st.dataframe(df[["Ticker", "Market Value", "Weight %", "Target Value", "Rebalance ($)"]])
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Holdings", len(df))
+    col2.metric("Total Cost", f"${df['Cost'].sum():,.0f}")
+    col3.metric("Total Market Value", f"${df['Market Value'].sum():,.0f}")
+
+    st.subheader("Top Trades to Execute")
+    st.dataframe(top_trades(df), use_container_width=True)
+
+    st.subheader("Full Portfolio")
+    st.dataframe(df, use_container_width=True)
+
+
+# =========================
+# TICKER VIEW
+# =========================
+elif page == "🔍 Ticker Deep Dive":
+    st.title("Ticker Deep Dive")
+
+    ticker = st.selectbox("Select Ticker", list(PORTFOLIO.keys()))
+    row = df[df["Ticker"] == ticker].iloc[0]
+
+    st.write(row)
+
+
+# =========================
+# NEWS (placeholder)
+# =========================
+elif page == "📰 News Feed":
+    st.title("News Feed")
+    st.info("Ready for API integration (Yahoo / Finnhub / NewsAPI)")
+    st.write("Hook news per ticker here")
+
+
+# =========================
+# SIGNALS
+# =========================
+elif page == "📉 Signals Summary":
+    st.title("Signals Summary")
+
+    signal_df = df[["Ticker", "Signal", "Risk", "RSI", "Return %"]]
+    st.dataframe(signal_df, use_container_width=True)
+
+
+# =========================
+# TOOLS
+# =========================
+elif page == "🛠️ Trading Tools":
+    st.title("Trading Tools")
+
+    st.write("### Performance Distribution")
+    st.bar_chart(df.set_index("Ticker")["Return %"])
+
+    st.write("### Risk Exposure")
+    st.bar_chart(df["Risk"].value_counts())
