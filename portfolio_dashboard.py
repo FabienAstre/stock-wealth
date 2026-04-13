@@ -260,205 +260,6 @@ elif page == "🔍 Ticker Deep Dive":
 
     st.write(row)
 
-
-# =========================
-# NEWS (placeholder)
-# =========================
-elif page == "📰 News Feed":
-    st.title("News Feed")
-    st.info("Ready for API integration (Yahoo / Finnhub / NewsAPI)")
-    st.write("Hook news per ticker here")
-
-
-# =========================
-# SIGNALS
-# =========================
-elif page == "📉 Signals Summary":
-    st.title("Signals Summary")
-
-    signal_df = df[["Ticker", "Signal", "Risk", "RSI", "Return %"]]
-    st.dataframe(signal_df, use_container_width=True)
-
-
-# =========================
-# TOOLS
-# =========================
-elif page == "🛠️ Trading Tools":
-    st.title("Trading Tools")
-
-    st.write("### Performance Distribution")
-    st.bar_chart(df.set_index("Ticker")["Return %"])
-
-    st.write("### Risk Exposure")
-    st.bar_chart(df["Risk"].value_counts())
-
-
-# ══════════════════════════════════════════════════════════════════
-# PAGE 2 — TICKER DEEP DIVE
-# ══════════════════════════════════════════════════════════════════
-elif page == "🔍 Ticker Deep Dive":
-    ticker = selected
-    pos    = PORTFOLIO[ticker]
-    st.markdown(f"# 🔍 {ticker}")
- 
-    with st.spinner(f"Loading {ticker}…"):
-        d    = fetch_ticker(ticker)
-        news = fetch_news(ticker)
-        ec   = fetch_earnings_consensus(ticker)
- 
-    price = d.get("price")
-    if not price:
-        st.error(f"No data for {ticker}.")
-        st.stop()
- 
-    inf   = d.get("info",{})
-    cv    = price * pos["shares"]
-    cb    = pos["ac"] * pos["shares"]
-    pnl   = cv - cb
-    pnlp  = pnl/cb*100 if cb else 0
-    sig   = d.get("signal","HOLD")
-    score = d.get("score",0)
-    conf  = d.get("confidence",0)
-    ind   = d.get("indicators",{})
-    sc    = SIG_COLOR.get(sig,"#aaa")
- 
-    # Header metrics
-    c1,c2,c3,c4,c5 = st.columns(5)
-    c1.metric("Price",     f"${price:.2f}")
-    c2.metric("Avg Cost",  f"${pos['ac']:.2f}")
-    c3.metric("Mkt Value", f"${cv:,.0f}")
-    c4.metric("P&L",       f"${pnl:,.0f}", delta=f"{pnlp:+.1f}%")
-    c5.markdown(
-        f'<div style="background:#1c1f26;border-radius:10px;padding:12px;'
-        f'text-align:center;border:2px solid {sc};margin-top:4px">'
-        f'<div style="font-size:10px;color:#aaa">SIGNAL · {conf}% conf</div>'
-        f'<div style="font-size:18px;font-weight:900;color:{sc}">{sig}</div>'
-        f'<div style="font-size:10px;color:#aaa">Score {score:+d}/10</div></div>',
-        unsafe_allow_html=True)
- 
-    # ── Earnings + consensus ──────────────────────────────────────
-    st.markdown("---")
-    st.markdown("### 🗓️ Earnings & Analyst Data")
- 
-    ea1,ea2,ea3,ea4 = st.columns(4)
- 
-    # Next earnings
-    ne = ec.get("next_earnings")
-    days_away = None
-    earn_col  = "#aaa"
-    if ne:
-        try:
-            dt = datetime.strptime(ne[:10],"%Y-%m-%d")
-            days_away = (dt - datetime.now()).days
-            earn_col  = "#ffd740" if 0<=days_away<=30 else ("#ff5252" if days_away<0 else "#69f0ae")
-        except: pass
-    with ea1:
-        st.markdown(
-            f'<div class="earn-box">'
-            f'<div style="font-size:10px;color:#888">Next Earnings</div>'
-            f'<div style="font-size:16px;font-weight:700;color:{earn_col}">'
-            f'{ne if ne else "Not found"}</div>'
-            f'<div style="font-size:11px;color:#888">'
-            f'{"In "+str(days_away)+" days" if days_away is not None and days_away>=0 else ("Past" if days_away is not None else "")}'
-            f'</div></div>', unsafe_allow_html=True)
- 
-    # Consensus
-    rec_col, rec_lbl = consensus_style(ec.get("rec_key",""))
-    n_anal = ec.get("num_analysts",0)
-    rm     = ec.get("rec_mean")
-    with ea2:
-        st.markdown(
-            f'<div class="earn-box">'
-            f'<div style="font-size:10px;color:#888">Analyst Consensus ({n_anal} analysts)</div>'
-            f'<div style="font-size:18px;font-weight:900;color:{rec_col}">{rec_lbl}</div>'
-            f'<div style="font-size:11px;color:#888">Score: {fmt_opt(rm,".2f")}/5</div>'
-            f'</div>', unsafe_allow_html=True)
- 
-    # Target
-    tgt  = ec.get("target_mean")
-    up   = ec.get("upside")
-    up_c = "#00e676" if up and up>0 else "#ff5252"
-    with ea3:
-        st.markdown(
-            f'<div class="earn-box">'
-            f'<div style="font-size:10px;color:#888">Mean Price Target</div>'
-            f'<div style="font-size:18px;font-weight:700;color:#fff">{fmt_opt(tgt,"$.2f")}</div>'
-            f'<div style="font-size:12px;color:{up_c}">'
-            f'{"Upside "+fmt_opt(up,"+.1f%") if up is not None else ""}</div>'
-            f'</div>', unsafe_allow_html=True)
- 
-    # Range
-    tlo = ec.get("target_low")
-    thi = ec.get("target_high")
-    with ea4:
-        st.markdown(
-            f'<div class="earn-box">'
-            f'<div style="font-size:10px;color:#888">Target Range (Low → High)</div>'
-            f'<div style="font-size:16px;font-weight:700;color:#fff">'
-            f'{fmt_opt(tlo,"$.2f")} → {fmt_opt(thi,"$.2f")}</div>'
-            f'</div>', unsafe_allow_html=True)
- 
-    # ── AI Prediction ─────────────────────────────────────────────
-    st.markdown("---")
-    st.markdown("### 🤖 ChatGPT Analysis")
-    if gpt_key:
-        if st.button(f"Generate GPT prediction for {ticker}"):
-            with st.spinner("GPT is thinking…"):
-                txt = gpt_predict(ticker, ind, inf, pnlp, sig, score, gpt_key, gpt_model)
-            st.session_state[f"gpt_{ticker}"] = txt
-        if f"gpt_{ticker}" in st.session_state:
-            st.markdown(
-                f'<div class="ai-box"><div style="font-size:11px;color:#7986cb;'
-                f'font-weight:700;margin-bottom:8px">GPT-4o · {ticker}</div>'
-                f'<div style="font-size:13px;line-height:1.8;color:#e0e0e0">'
-                f'{st.session_state[f"gpt_{ticker}"].replace(chr(10),"<br>")}'
-                f'</div></div>', unsafe_allow_html=True)
-    else:
-        st.info("Enter your OpenAI API key in the sidebar to enable AI predictions.")
- 
-    # ── Chart + Indicators ────────────────────────────────────────
-    st.markdown("---")
-    tab1, tab2 = st.tabs(["📈 Price Chart (1Y)", "📊 Indicators"])
-    with tab1:
-        hist = d.get("hist")
-        if hist is not None and not hist.empty:
-            cd = hist["Close"].squeeze().reset_index()
-            cd.columns = ["Date","Close"]
-            st.line_chart(cd.set_index("Date"))
-        else:
-            st.info("No chart data.")
-    with tab2:
-        rsi_v  = ind.get("RSI","N/A")
-        sma50  = ind.get("SMA50","N/A")
-        sma200 = ind.get("SMA200","N/A")
-        macdh  = ind.get("MACD_hist","N/A")
-        bbp    = ind.get("BB_pos","N/A")
-        volr   = ind.get("Vol_ratio","N/A")
-        mom    = ind.get("Mom_5d","N/A")
- 
-        tbl_data = [
-            ("RSI (14)", rsi_v,
-             "🟢 Oversold" if isinstance(rsi_v,(int,float)) and rsi_v<30
-             else "🔴 Overbought" if isinstance(rsi_v,(int,float)) and rsi_v>70 else "🟡 Neutral"),
-            ("MACD Histogram", macdh,
-             "🟢 Bullish" if isinstance(macdh,(int,float)) and macdh>0 else "🔴 Bearish"),
-            ("vs SMA 50",
-             f"{'ABOVE ▲' if isinstance(sma50,(int,float)) and price>sma50 else 'BELOW ▼'} (${sma50})",
-             "🟢" if isinstance(sma50,(int,float)) and price>sma50 else "🔴"),
-            ("vs SMA 200",
-             f"{'ABOVE ▲' if isinstance(sma200,(int,float)) and price>sma200 else 'BELOW ▼'} (${sma200})",
-             "🟢" if isinstance(sma200,(int,float)) and price>sma200 else "🔴"),
-            ("Bollinger Pos", bbp,
-             "🟢 Buy zone" if isinstance(bbp,(int,float)) and bbp<0.2
-             else "🔴 Sell zone" if isinstance(bbp,(int,float)) and bbp>0.8 else "🟡 Mid"),
-            ("5d Momentum", f"{mom}%", "🟢 Strong" if isinstance(mom,(int,float)) and mom>5
-             else "🔴 Weak" if isinstance(mom,(int,float)) and mom<-5 else "🟡 Flat"),
-            ("Volume Ratio", volr,
-             "🟢 High volume" if isinstance(volr,(int,float)) and volr>1.5 else "🟡 Normal"),
-        ]
-        st.dataframe(pd.DataFrame(tbl_data, columns=["Indicator","Value","Signal"]),
-                     use_container_width=True, hide_index=True)
- 
     # ── Company info + News ───────────────────────────────────────
     st.markdown("---")
     ci1,ci2,ci3 = st.columns(3)
@@ -493,5 +294,37 @@ elif page == "🔍 Ticker Deep Dive":
             unsafe_allow_html=True)
     if not news:
         st.info("No recent news.")
- 
+
+
+# =========================
+# NEWS (placeholder)
+# =========================
+elif page == "📰 News Feed":
+    st.title("News Feed")
+    st.info("Ready for API integration (Yahoo / Finnhub / NewsAPI)")
+    st.write("Hook news per ticker here")
+
+
+# =========================
+# SIGNALS
+# =========================
+elif page == "📉 Signals Summary":
+    st.title("Signals Summary")
+
+    signal_df = df[["Ticker", "Signal", "Risk", "RSI", "Return %"]]
+    st.dataframe(signal_df, use_container_width=True)
+
+
+# =========================
+# TOOLS
+# =========================
+elif page == "🛠️ Trading Tools":
+    st.title("Trading Tools")
+
+    st.write("### Performance Distribution")
+    st.bar_chart(df.set_index("Ticker")["Return %"])
+
+    st.write("### Risk Exposure")
+    st.bar_chart(df["Risk"].value_counts())
+
  
