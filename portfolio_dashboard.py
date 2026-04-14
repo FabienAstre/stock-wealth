@@ -71,7 +71,6 @@ PORTFOLIO = {
     "BEP-UN.TO":{"shares":30.3548,"ac": 39.07},
     "BRK.TO":  {"shares": 20,     "ac": 33.38},
     "CEGS.TO": {"shares": 50,  "ac": 21.78},
-    "CGL.TO":  {"shares": 15,     "ac": 22.19},
     "CLBT":    {"shares": 40,     "ac": 18.65},
     "CMPS":    {"shares": 80,     "ac": 5.00},
     "COPP.TO": {"shares": 17,     "ac": 51.35},
