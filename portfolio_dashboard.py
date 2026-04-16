@@ -259,16 +259,6 @@ def fetch_news(ticker: str):
 # ── Portfolio summary ──────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def build_portfolio_summary():
-    
-    # DEBUG — paste after: df = build_portfolio_summary()
-st.write(f"Rows in df: {len(df)}")
-
-# Test one ticker directly
-test = fetch_ticker_data("VFV.TO")
-st.write("VFV.TO price:", test.get("price"))
-st.write("VFV.TO error:", test.get("error"))
-st.write("VFV.TO hist empty:", test.get("hist_1y", pd.DataFrame()).empty)
-
     rows = []
     for ticker, pos in PORTFOLIO.items():
         d = fetch_ticker_data(ticker)
