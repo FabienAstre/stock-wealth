@@ -204,35 +204,57 @@ def compute_signals(hist: pd.DataFrame) -> dict:
 
 
 # ── Data fetcher ───────────────────────────────────────────────────────────────
-@st.cache_data(ttl=300)   # cache 5 min
+@st.cache_data(ttl=300)
 def fetch_ticker_data(ticker: str):
     try:
-        t   = yf.Ticker(ticker)
-        inf = t.info or {}
-        hist_1y  = t.history(period="1y",  interval="1d")
-        hist_5d  = t.history(period="5d",  interval="15m")
-        hist_1d  = t.history(period="1d",  interval="5m")
+        t = yf.Ticker(ticker)
 
-        price = inf.get("currentPrice") or inf.get("regularMarketPrice") or inf.get("previousClose")
+        # Fetch history first — more reliable than .info
+        hist_1y = t.history(period="1y", interval="1d")
+        hist_5d = t.history(period="5d", interval="15m")
+        hist_1d = t.history(period="1d", interval="5m")
+
+        # Price: try .info, fall back to last close, then fast_info
+        price = None
+        try:
+            inf = t.info or {}
+            price = (
+                inf.get("currentPrice")
+                or inf.get("regularMarketPrice")
+                or inf.get("previousClose")
+            )
+        except Exception:
+            inf = {}
+
+        # Fallback 1: last row of 1y history
         if price is None and not hist_1y.empty:
-            price = float(hist_1y["Close"].iloc[-1])
+            price = float(hist_1y["Close"].squeeze().iloc[-1])
+
+        # Fallback 2: fast_info (lightweight, avoids heavy scraping)
+        if price is None:
+            try:
+                price = t.fast_info.get("last_price") or t.fast_info.get("lastPrice")
+            except Exception:
+                pass
 
         sig = compute_signals(hist_1y)
         return {
-            "ticker":    ticker,
-            "price":     price,
-            "info":      inf,
-            "hist_1y":   hist_1y,
-            "hist_5d":   hist_5d,
-            "hist_1d":   hist_1d,
-            "signal":    sig["signal"],
-            "score":     sig["score"],
+            "ticker":     ticker,
+            "price":      price,
+            "info":       inf,
+            "hist_1y":    hist_1y,
+            "hist_5d":    hist_5d,
+            "hist_1d":    hist_1d,
+            "signal":     sig["signal"],
+            "score":      sig["score"],
             "indicators": sig["details"],
         }
     except Exception as e:
-        return {"ticker": ticker, "price": None, "error": str(e),
-                "signal": "HOLD", "score": 0, "indicators": {}}
-
+        return {
+            "ticker": ticker, "price": None, "error": str(e),
+            "signal": "HOLD", "score": 0, "indicators": {}, "info": {},
+            "hist_1y": pd.DataFrame(), "hist_5d": pd.DataFrame(), "hist_1d": pd.DataFrame(),
+        }
 
 @st.cache_data(ttl=600)
 def fetch_news(ticker: str):
