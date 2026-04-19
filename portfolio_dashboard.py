@@ -64,7 +64,7 @@ PORTFOLIO = {
     "AEHR":    {"shares": 15,     "ac": 20.56},
     "AMZN.TO": {"shares": 79.99,  "ac": 17.19},
     "APLD":    {"shares": 25,     "ac": 24.72},
-    "APPS.NE": {"shares": 39.842, "ac": 17.68},
+    "APPS.TO": {"shares": 39.842, "ac": 17.68},
     "ASML.TO": {"shares": 45,     "ac": 26.20},
     "BAM.TO":  {"shares": 10.08,  "ac": 72.44},
     "BBAI":    {"shares": 60,     "ac": 7.655},
