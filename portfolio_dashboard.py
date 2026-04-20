@@ -613,7 +613,7 @@ elif page == "📉 Signals Summary":
             f'<div style="background:#1c1f26;border-radius:10px;padding:12px 16px;'
             f'margin-bottom:8px;border-left:4px solid {color};'
             f'display:flex;align-items:center;justify-content:space-between">'
-            f'<div><span style="font-size:25px;font-weight:700">{row["Ticker"]}</span>'
+            f'<div><span style="font-size:25px;font-weight:700;color:#aaa">{row["Ticker"]}</span>'
             f' &nbsp; <span style="font-size:12px;color:#aaa">${row["Price"]:.2f} | RSI: {row["RSI"]}</span></div>'
             f'<div style="text-align:right">'
             f'<span style="font-size:14px;font-weight:800;color:{color}">{sig}</span>'
