@@ -927,8 +927,15 @@ elif page == "🚨 Risk & Alerts":
                 [1.0,  "#00e676"],
             ],
             zmin=-1, zmax=1,
-            hovertemplate="<b>%{y} / %{x}</b><br>Correlation: %{z:.2f}<extra></extra>",
-            colorbar=dict(title="Correlation", tickfont=dict(color="#ccc"), titlefont=dict(color="#ccc")),
+                hovertemplate="<b>%{y} / %{x}</b><br>Correlation: %{z:.2f}<extra></extra>",
+    colorbar=dict(
+        title=dict(
+            text="Correlation",
+            font=dict(color="#ccc")
+        ),
+        tickfont=dict(color="#ccc")
+    ),
+))
         ))
         fig_corr.update_layout(
             height=700,
