@@ -916,19 +916,24 @@ elif page == "🚨 Risk & Alerts":
         corr_sub   = corr.loc[tickers_in, tickers_in]
 
         fig_corr = go.Figure(data=go.Heatmap(
-            z=corr_sub.values,
-            x=corr_sub.columns.tolist(),
-            y=corr_sub.index.tolist(),
-            colorscale=[
-                [0.0,  "#ff1744"],
-                [0.25, "#ff5252"],
-                [0.5,  "#1c1f26"],
-                [0.75, "#69f0ae"],
-                [1.0,  "#00e676"],
-            ],
-            zmin=-1, zmax=1,
-               hovertemplate="<b>%{y} / %{x}</b><br>Correlation: %{z:.2f}<extra></extra>",
-            colorbar=dict(title="Correlation", tickfont=dict(color="#ccc"), titlefont=dict(color="#ccc")),
+    z=corr_sub.values,
+    x=corr_sub.columns.tolist(),
+    y=corr_sub.index.tolist(),
+    colorscale=[
+        [0.0,  "#ff1744"],
+        [0.25, "#ff5252"],
+        [0.5,  "#1c1f26"],
+        [0.75, "#69f0ae"],
+        [1.0,  "#00e676"],
+    ],
+    zmin=-1, zmax=1,
+    hovertemplate="<b>%{y} / %{x}</b><br>Correlation: %{z:.2f}<extra></extra>",
+    colorbar=dict(
+        title="Correlation",
+        tickfont=dict(color="#ccc"),
+        titlefont=dict(color="#ccc")   # ❌ THIS LINE BREAKS IT
+    ),
+))
         fig_corr.update_layout(
             height=700,
             paper_bgcolor="rgba(0,0,0,0)",
