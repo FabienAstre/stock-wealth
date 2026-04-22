@@ -99,7 +99,7 @@ PORTFOLIO = {
     "NU":        {"shares": 40,       "ac": 14.98},
     "NVDA.TO":   {"shares": 80,       "ac": 22.96},
     "NVTS":      {"shares": 60,       "ac": 7.84},
-    "NXT":       {"shares": 9,        "ac": 77.14},
+    "NXT":       {"shares": 8,        "ac": 72.18},
     "OKLO":      {"shares": 9,        "ac": 121.28},
     "ONE.V":     {"shares": 400,      "ac": 0.8275},
     "PHOS.CN":   {"shares": 500,      "ac": 0.5943},
@@ -157,7 +157,7 @@ THEMES = {
     "RGTI":      "Quantum Computing",
     "WPM.TO":    "Precious Metals & Mining",
     "COPP.TO":   "Precious Metals & Mining",
-    "PNG.V":     "Space, Aerospace & Defence",
+    "PNG.V":     "Precious Metals & Mining",
     "ABCL":      "Biotech & Health Tech",
     "RXRX":      "Biotech & Health Tech",
     "CMPS":      "Biotech & Health Tech",
@@ -1224,7 +1224,10 @@ elif page == "🚨 Risk & Alerts":
             ],
             zmin=-1, zmax=1,
             hovertemplate="<b>%{y} / %{x}</b><br>Correlation: %{z:.2f}<extra></extra>",
-            colorbar=dict(title="Corr", tickfont=dict(color="#ccc"), titlefont=dict(color="#ccc")),
+            colorbar=dict(
+                title=dict(text="Corr", font=dict(color="#ccc")),
+                tickfont=dict(color="#ccc"),
+            ),
         ))
         fig_corr.update_layout(
             height=700,
