@@ -99,7 +99,7 @@ PORTFOLIO = {
     "NU":        {"shares": 40,       "ac": 14.98},
     "NVDA.TO":   {"shares": 80,       "ac": 22.96},
     "NVTS":      {"shares": 60,       "ac": 7.84},
-    "NXT":       {"shares": 8,        "ac": 72.18},
+    "NXT":       {"shares": 9,        "ac": 77.14},
     "OKLO":      {"shares": 9,        "ac": 121.28},
     "ONE.V":     {"shares": 400,      "ac": 0.8275},
     "PHOS.CN":   {"shares": 500,      "ac": 0.5943},
