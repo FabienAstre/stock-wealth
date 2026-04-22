@@ -157,7 +157,7 @@ THEMES = {
     "RGTI":      "Quantum Computing",
     "WPM.TO":    "Precious Metals & Mining",
     "COPP.TO":   "Precious Metals & Mining",
-    "PNG.V":     "Precious Metals & Mining",
+    "PNG.V":     "Space, Aerospace & Defence",
     "ABCL":      "Biotech & Health Tech",
     "RXRX":      "Biotech & Health Tech",
     "CMPS":      "Biotech & Health Tech",
