@@ -1307,7 +1307,7 @@ elif page == "🔍 Ticker Deep Dive":
     st.markdown(
         f'<div style="background:#1c1f26;border-radius:8px;padding:8px 14px;margin:8px 0;'
         f'border-left:4px solid {dd_c};font-size:13px;display:flex;gap:24px">'
-        f'<span><b style="color:{dd_c}">Drawdown: {dd:.1f}%</b> from 52W High '
+        f'<span><b style="color:#fff">Drawdown: {dd:.1f}%</b> from 52W High '
         f'(${ind.get("High_52W", price):.2f})</span>'
         f'<span><b style="color:{sh_c}">Sharpe: {sharpe:.2f}</b></span>'
         f'<span style="color:#fff">52W Low: ${ind.get("Low_52W", price):.2f}</span>'
