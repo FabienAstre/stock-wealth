@@ -754,7 +754,7 @@ if page == "📊 Overview":
     st.markdown("---")
     st.markdown("### 📋 All Positions")
     disp = df[[
-        "Ticker", "Theme", "Factor", "Price", "Shares","Signal", "AC",
+        "Ticker", "Theme", "Factor", "Price", "Shares","AC",
         "Mkt Value", "P&L $", "P&L %", "Breakeven %",
         "1D %", "1W %", "Sharpe", "Signal", "RSI",
     ]].copy().sort_values("Mkt Value", ascending=False)
