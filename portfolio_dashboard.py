@@ -1310,7 +1310,7 @@ elif page == "🔍 Ticker Deep Dive":
         f'<span><b style="color:{dd_c}">Drawdown: {dd:.1f}%</b> from 52W High '
         f'(${ind.get("High_52W", price):.2f})</span>'
         f'<span><b style="color:{sh_c}">Sharpe: {sharpe:.2f}</b></span>'
-        f'<span style="color:#888">52W Low: ${ind.get("Low_52W", price):.2f}</span>'
+        f'<span style="color:#fff">52W Low: ${ind.get("Low_52W", price):.2f}</span>'
         f'</div>', unsafe_allow_html=True)
 
     st.markdown("---")
