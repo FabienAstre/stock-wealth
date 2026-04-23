@@ -551,7 +551,6 @@ def build_portfolio_summary() -> pd.DataFrame:
             "Factor":         FACTORS.get(ticker, "Other"),
             "Price":          price,
             "Shares":         shares,
-            "Signal":         d.get("signal", "HOLD"),
             "AC":             ac,
             "Mkt Value":      cv,
             "Cost":           cb,
@@ -755,7 +754,7 @@ if page == "📊 Overview":
     st.markdown("---")
     st.markdown("### 📋 All Positions")
     disp = df[[
-        "Ticker", "Theme", "Factor", "Price", "Shares", "AC",
+        "Ticker", "Theme", "Factor", "Price", "Shares","Signal", "AC",
         "Mkt Value", "P&L $", "P&L %", "Breakeven %",
         "1D %", "1W %", "Sharpe", "Signal", "RSI",
     ]].copy().sort_values("Mkt Value", ascending=False)
