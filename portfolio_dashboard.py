@@ -139,7 +139,6 @@ THEMES = {
     "SOUN":      "AI Applications",
     "TEM":       "AI Applications",
     "VFV.TO":    "Core ETFs",
-    "VDW.TO":    "Core ETFs",
     "ZCN.TO":    "Core ETFs",
     "XEF.TO":    "Core ETFs",
     "VEE.TO":    "Core ETFs",
@@ -192,6 +191,7 @@ THEMES = {
     "ASML.TO":   "Semiconductors",
     "NVTS":      "Semiconductors",
     "AEHR":      "Semiconductors",
+    "VDW.TO":    "Core ETFs",
 }
 
 THEME_COLORS = {
