@@ -551,6 +551,7 @@ def build_portfolio_summary() -> pd.DataFrame:
             "Factor":         FACTORS.get(ticker, "Other"),
             "Price":          price,
             "Shares":         shares,
+            "Signal":         d.get("signal", "HOLD"),
             "AC":             ac,
             "Mkt Value":      cv,
             "Cost":           cb,
