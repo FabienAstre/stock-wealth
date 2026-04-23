@@ -86,7 +86,7 @@ PORTFOLIO = {
     "DRUG.CN":   {"shares": 8,        "ac": 73.92},
     "ENB.TO":    {"shares": 20,       "ac": 62.53},
     "EOSE":      {"shares": 60,       "ac": 12.09},
-    "GC=F":      {"shares": 0.1497 Oz,"ac": 6009.82},
+    "GC=F":      {"shares": 0.1497,   "ac": 6009.82},
     "HELP":      {"shares": 80,       "ac": 8.47},
     "IMVT":      {"shares": 20,       "ac": 26.48},
     "ISRG.NE":   {"shares": 25,       "ac": 26.86},
