@@ -241,7 +241,7 @@ FACTORS = {
     "XEF.TO":    "Index / Diversified", "VEE.TO":  "Index / Diversified",
     "XID.TO":    "Index / Diversified", "XSU.TO":  "Index / Diversified",
     "ZJPN.TO":   "Index / Diversified", "VNM":     "Index / Diversified",
-    "CEGS.TO":   "Index / Diversified",
+    "CEGS.TO":   "Index / Diversified", "VDY.TO":    "Index / Diversified"
 }
 
 FACTOR_COLORS = {
